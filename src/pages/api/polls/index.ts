@@ -122,7 +122,7 @@ export const POST: APIRoute = async ({ request }) => {
       const baseUrl = publicSiteUrl.trim();
       shareUrl = `${baseUrl}/poll/${newPoll.id}`;
     } else {
-      // Fall back to request URL for development
+      // Fall back to request URL
       const url = new URL(request.url);
       shareUrl = `${url.protocol}//${url.host}/poll/${newPoll.id}`;
     }

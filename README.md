@@ -71,13 +71,14 @@ A modern, production-ready polling application built with Astro, React, and Post
 
 ## 🚧 Known Limitations
 
-1. **Shared Network Limitation**: IP-based restrictions affect users on shared networks
+1. **Shared Network Limitation**: IP-based restrictions affect users on shared networks (office, cafe, public WiFi)
 2. **No User Authentication**: Cannot track per-user voting across different devices
 3. **Single Choice Only**: No support for multiple-choice polls
 4. **No Poll Editing**: Once created, polls cannot be modified
 5. **No Result Hiding**: Results are immediately visible (no "hide until voting" option)
 6. **Fingerprint Bypass**: Determined attackers can bypass browser fingerprinting
 7. **No Anonymous IDs**: Cannot vote without JavaScript enabled
+8. **Cache Behavior**: When a poll is deleted by its creator, the cached version may briefly appear for users who previously viewed it. This is automatically cleared within 5 minutes or on page refresh.
 
 **Note**: The app is fully compatible with Vercel's serverless functions when properly configured with the `PUBLIC_SITE_URL` environment variable.
 

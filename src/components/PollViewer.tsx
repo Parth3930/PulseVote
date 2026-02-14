@@ -116,6 +116,19 @@ export function PollViewer({ pollId }: PollViewerProps) {
             const { data, timestamp } = JSON.parse(cachedPoll);
             const age = Date.now() - timestamp;
             if (age < POLL_CACHE_DURATION) {
+              // Verify poll still exists in background
+              fetch(`/api/polls/${pollId}`)
+                .then((response) => {
+                  if (!response.ok) {
+                    // Poll no longer exists, clear cache
+                    localStorage.removeItem(pollCacheKey);
+                    setPoll(null);
+                  }
+                })
+                .catch(() => {
+                  // Ignore verification errors, use cached data
+                });
+
               setPoll(data);
               setLoading(false);
               return;
@@ -134,7 +147,10 @@ export function PollViewer({ pollId }: PollViewerProps) {
             JSON.stringify({ data, timestamp: Date.now() }),
           );
         } else if (response.status === 404) {
+          // Clear cache if poll not found
+          localStorage.removeItem(pollCacheKey);
           addToast("Poll not found", "error");
+          setPoll(null);
         } else {
           addToast(data.error || "Failed to load poll", "error");
         }
@@ -327,6 +343,14 @@ export function PollViewer({ pollId }: PollViewerProps) {
       const data = await response.json();
 
       if (response.ok) {
+        // Clear all cache for this poll
+        const pollCacheKey = POLL_CACHE_KEY(pollId);
+        localStorage.removeItem(pollCacheKey);
+        if (visitorId) {
+          const voteCacheKey = VOTE_CACHE_KEY(pollId, visitorId);
+          localStorage.removeItem(voteCacheKey);
+        }
+
         addToast("Poll deleted successfully", "success");
         // Redirect to home after a short delay
         setTimeout(() => {
