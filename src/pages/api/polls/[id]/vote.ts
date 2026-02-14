@@ -1,9 +1,10 @@
 import type { APIRoute } from "astro";
 import { db } from "@/lib/db";
 import { votes, options, voteAttempts } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, count } from "drizzle-orm";
 import { getClientIp } from "@/lib/fingerprint";
 import { checkVoteRateLimit } from "@/lib/rate-limit";
+import { publishVoteUpdate } from "@/lib/redis-pubsub";
 
 export const POST: APIRoute = async ({ params, request }) => {
   try {
@@ -151,6 +152,33 @@ export const POST: APIRoute = async ({ params, request }) => {
       userAgent,
       attemptReason: "success",
     });
+
+    // Publish real-time update via Redis pub/sub
+    try {
+      // Get updated vote counts
+      const updatedVoteCounts = await db
+        .select({
+          optionId: votes.optionId,
+          count: count(),
+        })
+        .from(votes)
+        .where(eq(votes.pollId, pollId))
+        .groupBy(votes.optionId);
+
+      const totalVotes = updatedVoteCounts.reduce(
+        (sum, v) => sum + Number(v.count),
+        0,
+      );
+
+      // Publish to Redis for instant updates
+      await publishVoteUpdate(pollId, {
+        totalVotes,
+        voteCounts: updatedVoteCounts,
+      });
+    } catch (error) {
+      console.error("Error publishing vote update:", error);
+      // Don't fail the vote if pub/sub fails
+    }
 
     return new Response(
       JSON.stringify({ message: "Vote recorded successfully" }),
