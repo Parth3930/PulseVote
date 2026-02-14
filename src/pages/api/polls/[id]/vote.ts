@@ -46,18 +46,20 @@ export const POST: APIRoute = async ({ params, request }) => {
       );
     }
 
-    // Anti-abuse mechanism 2: Check if this IP has already voted
-    const existingVoteByIp = await db.query.votes.findFirst({
-      where: and(eq(votes.pollId, pollId), eq(votes.ipAddress, ipAddress)),
-    });
+    // Anti-abuse mechanism 2: Check if this IP has already voted (only if IP is available)
+    if (ipAddress) {
+      const existingVoteByIp = await db.query.votes.findFirst({
+        where: and(eq(votes.pollId, pollId), eq(votes.ipAddress, ipAddress)),
+      });
 
-    if (existingVoteByIp) {
-      return new Response(
-        JSON.stringify({
-          error: "This IP address has already voted on this poll",
-        }),
-        { status: 403, headers: { "Content-Type": "application/json" } },
-      );
+      if (existingVoteByIp) {
+        return new Response(
+          JSON.stringify({
+            error: "This IP address has already voted on this poll",
+          }),
+          { status: 403, headers: { "Content-Type": "application/json" } },
+        );
+      }
     }
 
     // Verify the option belongs to this poll

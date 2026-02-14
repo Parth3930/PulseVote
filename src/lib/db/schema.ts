@@ -47,18 +47,16 @@ export const votes = pgTable(
       .notNull()
       .references(() => options.id, { onDelete: "cascade" }),
     visitorId: varchar("visitor_id", { length: 255 }).notNull(),
-    ipAddress: varchar("ip_address", { length: 45 }).notNull(),
+    ipAddress: varchar("ip_address", { length: 45 }),
     votedAt: timestamp("voted_at").notNull().defaultNow(),
   },
   (table) => ({
     pollIdIdx: index("votes_poll_id_idx").on(table.pollId),
     visitorIdIdx: index("votes_visitor_id_idx").on(table.visitorId),
-    ipAddressIdx: index("votes_ip_address_idx").on(table.ipAddress),
     pollVisitorIdx: index("votes_poll_visitor_idx").on(
       table.pollId,
       table.visitorId,
     ),
-    pollIpIdx: index("votes_poll_ip_idx").on(table.pollId, table.ipAddress),
   }),
 );
 
