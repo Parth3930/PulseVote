@@ -16,7 +16,7 @@ A modern, production-ready polling application built with Astro, React, and Post
 ### 1. Browser Fingerprinting
 **Threat Prevented**: Users clearing cookies/LocalStorage to vote multiple times
 
-**Implementation**: 
+**Implementation**:
 - Uses `@fingerprintjs/fingerprintjs` library
 - Generates a unique device identifier based on browser characteristics
 - Each visitor ID is stored in the database with their vote
@@ -52,6 +52,65 @@ A modern, production-ready polling application built with Astro, React, and Post
 - VPNs and proxies can bypass IP-based restrictions
 - Multiple users behind NAT will appear as a single IP
 - CGNAT (Carrier-Grade NAT) can further reduce effectiveness
+
+### 3. Request Rate Limiting (NEW)
+**Threat Prevented**: Automated scripts spamming vote requests, brute force attacks
+
+**Implementation**:
+- Uses Upstash Redis for distributed rate limiting (optional)
+- Sliding window algorithm: 3 votes per 10 minutes per IP/visitor
+- Graceful fallback when Redis is not configured
+
+**How It Works**:
+- Each vote attempt is tracked using IP address or visitor ID
+- Rate limit is checked before processing the vote
+- Returns HTTP 429 (Too Many Requests) when limit exceeded
+- Includes Retry-After header indicating when to retry
+
+**Configuration**:
+- Requires `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` environment variables
+- If not configured, rate limiting is disabled (fail-open)
+- See https://upstash.com for free Redis tier
+
+### 4. User Agent Tracking (NEW)
+**Threat Prevented**: Same user clearing cookies but using same browser
+
+**Implementation**:
+- Captures User-Agent header from each vote request
+- Stores up to 500 characters in the database
+- Available for future abuse pattern analysis
+
+**How It Works**:
+- User-Agent string is captured from request headers
+- Stored alongside vote record in the database
+- Can be used to detect voting patterns from same browser
+- Helps identify sophisticated abuse attempts
+
+**Limitations**:
+- User-Agent can be spoofed by technical users
+- Browser updates can change User-Agent strings
+- Not used for blocking, only tracking and analysis
+
+### 5. Vote Attempt Auditing (NEW)
+**Threat Prevented**: Provides visibility into abuse patterns and attempted fraud
+
+**Implementation**:
+- Separate `vote_attempts` table tracks ALL vote attempts
+- Records successful votes, rejected votes, and blocked attempts
+- Categorizes by reason: success, duplicate_visitor, duplicate_ip, rate_limited
+
+**How It Works**:
+- Every vote attempt (successful or not) is logged
+- Includes visitor ID, IP address, User-Agent, and timestamp
+- Reason for rejection is recorded for analysis
+- Enables detection of abuse patterns over time
+
+**Use Cases**:
+- Identify users attempting to bypass protections
+- Monitor effectiveness of anti-abuse mechanisms
+- Generate reports on voting activity
+- Detect and respond to coordinated attacks
+- Data available for future machine learning models
 
 ## 📋 Edge Cases Handled
 
@@ -122,12 +181,24 @@ A modern, production-ready polling application built with Astro, React, and Post
    PUBLIC_SITE_URL="https://your-project.vercel.app"
    ```
 
+   **Optional - For rate limiting** (recommended for production):
+   ```
+   UPSTASH_REDIS_REST_URL="https://your-redis-instance.upstash.io"
+   UPSTASH_REDIS_REST_TOKEN="your-redis-token-here"
+   ```
+   Get free Redis at https://upstash.com
+
    **Note**: You can leave `PUBLIC_SITE_URL` empty for local development. It's only required for Vercel deployment to generate correct shareable URLs.
 
 4. **Set up the database**:
-   
-   Go to your Supabase project's **SQL Editor** and run the SQL commands from `drizzle/seed.sql`
-   
+
+   Go to your Supabase project's **SQL Editor** and run the SQL commands from these files in order:
+   - `drizzle/seed.sql` (base schema)
+   - `drizzle/add-creator-id.sql` (if upgrading)
+   - `drizzle/fix-ip-address-nullable.sql` (if upgrading)
+   - `drizzle/add-user-agent.sql` (NEW - adds user agent tracking)
+   - `drizzle/add-vote-attempts-table.sql` (NEW - adds vote attempt auditing)
+
    OR use the migration script:
    ```bash
    bun run scripts/migrate.ts
@@ -153,12 +224,17 @@ A modern, production-ready polling application built with Astro, React, and Post
    - Configure environment variables:
      - `DATABASE_URL`: Your Supabase PostgreSQL connection string
      - `PUBLIC_SITE_URL`: Your Vercel deployment URL (e.g., `https://your-project.vercel.app`)
+     - `UPSTASH_REDIS_REST_URL`: (Optional) Your Upstash Redis URL for rate limiting
+     - `UPSTASH_REDIS_REST_TOKEN`: (Optional) Your Upstash Redis token
      - **Important**: Set `PUBLIC_SITE_URL` before first deployment to ensure shareable links work correctly
    - Click "Deploy"
 
 3. **Set up database**:
    - Go to your Supabase project's SQL Editor
-   - Copy and run the SQL from `drizzle/seed.sql`
+   - Copy and run the SQL from these files in order:
+     - `drizzle/seed.sql`
+     - `drizzle/add-user-agent.sql`
+     - `drizzle/add-vote-attempts-table.sql`
    - This creates all tables and indexes
 
 4. **Your app is live!** 🎉

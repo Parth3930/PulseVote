@@ -5,6 +5,7 @@ import {
   timestamp,
   index,
   varchar,
+  integer,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -48,6 +49,7 @@ export const votes = pgTable(
       .references(() => options.id, { onDelete: "cascade" }),
     visitorId: varchar("visitor_id", { length: 255 }).notNull(),
     ipAddress: varchar("ip_address", { length: 45 }),
+    userAgent: varchar("user_agent", { length: 500 }),
     votedAt: timestamp("voted_at").notNull().defaultNow(),
   },
   (table) => ({
@@ -81,5 +83,39 @@ export const votesRelations = relations(votes, ({ one }) => ({
   option: one(options, {
     fields: [votes.optionId],
     references: [options.id],
+  }),
+}));
+
+// Vote attempt tracking for throttling and abuse detection
+export const voteAttempts = pgTable(
+  "vote_attempts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    pollId: uuid("poll_id")
+      .notNull()
+      .references(() => polls.id, { onDelete: "cascade" }),
+    visitorId: varchar("visitor_id", { length: 255 }).notNull(),
+    ipAddress: varchar("ip_address", { length: 45 }),
+    userAgent: varchar("user_agent", { length: 500 }),
+    attemptReason: varchar("attempt_reason", { length: 50 }), // 'duplicate_visitor', 'duplicate_ip', 'rate_limited', 'success'
+    attemptedAt: timestamp("attempted_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    pollIdIdx: index("vote_attempts_poll_id_idx").on(table.pollId),
+    visitorIdIdx: index("vote_attempts_visitor_id_idx").on(table.visitorId),
+    pollVisitorIdx: index("vote_attempts_poll_visitor_idx").on(
+      table.pollId,
+      table.visitorId,
+    ),
+    attemptedAtIdx: index("vote_attempts_attempted_at_idx").on(
+      table.attemptedAt,
+    ),
+  }),
+);
+
+export const voteAttemptsRelations = relations(voteAttempts, ({ one }) => ({
+  poll: one(polls, {
+    fields: [voteAttempts.pollId],
+    references: [polls.id],
   }),
 }));
