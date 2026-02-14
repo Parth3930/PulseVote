@@ -1,0 +1,28 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { PollViewerWithToast } from "../../components/PollViewerWithToast";
+import { ThemeToggle } from "../../components/ThemeToggle";
+
+const { id } = Astro.params;
+
+if (!id) {
+    return new Response("Poll ID is required", { status: 400 });
+}
+---
+
+<Layout title={`PulseVote - View Poll`}>
+    <ThemeToggle client:load />
+    <div class="space-y-12">
+        <header class="text-center space-y-3 animate-slide-up">
+            <h1
+                class="text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-br from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent"
+            >
+                PulseVote
+            </h1>
+        </header>
+
+        <div class="animate-slide-up delay-200">
+            <PollViewerWithToast pollId={id} client:load />
+        </div>
+    </div>
+</Layout>

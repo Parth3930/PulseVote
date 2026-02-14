@@ -1,0 +1,231 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        /* Dark Theme (Default) - Actually Dark */
+        --background: 240 10% 4%;
+        --foreground: 0 0% 95%;
+
+        --card: 240 10% 7%;
+        --card-foreground: 0 0% 95%;
+
+        --popover: 240 10% 7%;
+        --popover-foreground: 0 0% 95%;
+
+        /* Refined blue - not neon */
+        --primary: 215 25% 55%;
+        --primary-foreground: 0 0% 100%;
+
+        /* Subtle purple accent */
+        --secondary: 260 30% 50%;
+        --secondary-foreground: 0 0% 100%;
+
+        /* Muted dark */
+        --muted: 240 8% 12%;
+        --muted-foreground: 240 5% 55%;
+
+        /* Teal accent - calm but visible */
+        --accent: 180 40% 50%;
+        --accent-foreground: 0 0% 100%;
+
+        --destructive: 0 70% 55%;
+        --destructive-foreground: 0 0% 100%;
+
+        --border: 240 8% 18%;
+        --input: 240 8% 16%;
+        --ring: 215 25% 55%;
+
+        --radius: 0.75rem;
+    }
+
+    .light {
+        /* Light Theme - Clean & Crisp */
+        --background: 0 0% 100%;
+        --foreground: 240 10% 8%;
+
+        --card: 0 0% 100%;
+        --card-foreground: 240 10% 8%;
+
+        --popover: 0 0% 100%;
+        --popover-foreground: 240 10% 8%;
+
+        /* Classic blue */
+        --primary: 215 40% 50%;
+        --primary-foreground: 0 0% 100%;
+
+        /* Warm amber */
+        --secondary: 35 80% 55%;
+        --secondary-foreground: 240 10% 8%;
+
+        /* Soft neutral */
+        --muted: 240 5% 96%;
+        --muted-foreground: 240 4% 40%;
+
+        /* Rose accent */
+        --accent: 350 60% 55%;
+        --accent-foreground: 0 0% 100%;
+
+        --destructive: 0 75% 50%;
+        --destructive-foreground: 0 0% 100%;
+
+        --border: 240 6% 90%;
+        --input: 240 6% 90%;
+        --ring: 215 40% 50%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    html {
+        color-scheme: dark;
+    }
+    body {
+        @apply bg-background text-foreground;
+        font-feature-settings:
+            "rlig" 1,
+            "calt" 1;
+    }
+
+    .light {
+        color-scheme: light;
+    }
+}
+
+/* Animations */
+@layer utilities {
+    .animate-slide-up {
+        animation: slideUp 0.5s ease-out forwards;
+        opacity: 0;
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.4s ease-out forwards;
+        opacity: 0;
+    }
+
+    .animate-scale-in {
+        animation: scaleIn 0.3s ease-out forwards;
+        opacity: 0;
+    }
+
+    .animate-shimmer {
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.1),
+            transparent
+        );
+        background-size: 200% 100%;
+        animation: shimmer 2s infinite;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* Stagger delays */
+@layer utilities {
+    .delay-100 {
+        animation-delay: 100ms;
+    }
+    .delay-200 {
+        animation-delay: 200ms;
+    }
+    .delay-300 {
+        animation-delay: 300ms;
+    }
+    .delay-400 {
+        animation-delay: 400ms;
+    }
+    .delay-500 {
+        animation-delay: 500ms;
+    }
+    .delay-600 {
+        animation-delay: 600ms;
+    }
+    .delay-700 {
+        animation-delay: 700ms;
+    }
+    .delay-800 {
+        animation-delay: 800ms;
+    }
+}
+
+/* Gradient mesh background */
+@layer components {
+    .gradient-mesh {
+        background:
+            radial-gradient(
+                at 40% 20%,
+                hsla(215, 25%, 55%, 0.03) 0px,
+                transparent 50%
+            ),
+            radial-gradient(
+                at 80% 0%,
+                hsla(260, 30%, 50%, 0.02) 0px,
+                transparent 50%
+            ),
+            radial-gradient(
+                at 0% 50%,
+                hsla(180, 40%, 50%, 0.02) 0px,
+                transparent 50%
+            ),
+            radial-gradient(
+                at 80% 50%,
+                hsla(215, 25%, 55%, 0.02) 0px,
+                transparent 50%
+            ),
+            radial-gradient(
+                at 0% 100%,
+                hsla(260, 30%, 50%, 0.02) 0px,
+                transparent 50%
+            ),
+            radial-gradient(
+                at 80% 100%,
+                hsla(180, 40%, 50%, 0.02) 0px,
+                transparent 50%
+            );
+        background-attachment: fixed;
+    }
+}

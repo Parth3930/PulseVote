@@ -1,0 +1,30 @@
+---
+import "../styles/globals.css";
+
+interface Props {
+    title?: string;
+}
+
+const { title = "PulseVote - Real-Time Polling" } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <meta name="generator" content={Astro.generator} />
+        <title>{title}</title>
+        <meta
+            name="description"
+            content="Create polls in seconds, share instantly, and watch results update in real-time"
+        />
+    </head>
+    <body class="min-h-screen gradient-mesh">
+        <div id="toast-root"></div>
+        <main class="container mx-auto px-4 py-8 md:py-16 min-h-screen">
+            <slot />
+        </main>
+    </body>
+</html>
