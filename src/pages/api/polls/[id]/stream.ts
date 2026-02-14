@@ -38,14 +38,17 @@ export const GET: APIRoute = async ({ params, request }) => {
           .groupBy(votes.optionId);
 
         const totalVotes = initialVoteCounts.reduce(
-          (sum, v) => sum + Number(v.count),
+          (sum: number, vote) => sum + Number(vote.count),
           0,
         );
 
         const initialData = {
           type: "connected",
           pollId,
-          voteCounts: initialVoteCounts,
+          voteCounts: initialVoteCounts.map((v) => ({
+            optionId: String(v.optionId),
+            count: Number(v.count),
+          })),
           totalVotes,
           realtime: redisAvailable,
         };
@@ -125,7 +128,7 @@ export const GET: APIRoute = async ({ params, request }) => {
               .groupBy(votes.optionId);
 
             const totalVotes = voteCounts.reduce(
-              (sum, v) => sum + Number(v.count),
+              (sum: number, vote) => sum + Number(vote.count),
               0,
             );
 
@@ -135,7 +138,7 @@ export const GET: APIRoute = async ({ params, request }) => {
 
             for (const vote of voteCounts) {
               const optionId = String(vote.optionId);
-              const count = Number(v.count);
+              const count = Number(vote.count);
               currentVoteState.set(optionId, count);
 
               const previousCount = lastVoteState.get(optionId) || 0;
@@ -153,7 +156,10 @@ export const GET: APIRoute = async ({ params, request }) => {
               const updateData = {
                 type: "update",
                 pollId,
-                voteCounts,
+                voteCounts: voteCounts.map((v) => ({
+                  optionId: String(v.optionId),
+                  count: Number(v.count),
+                })),
                 totalVotes,
               };
 

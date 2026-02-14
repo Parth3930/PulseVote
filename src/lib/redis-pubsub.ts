@@ -10,7 +10,10 @@ export function getRedisClient(): Redis | null {
     return redis;
   }
 
-  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+  if (
+    process.env.UPSTASH_REDIS_REST_URL &&
+    process.env.UPSTASH_REDIS_REST_TOKEN
+  ) {
     redis = new Redis({
       url: process.env.UPSTASH_REDIS_REST_URL,
       token: process.env.UPSTASH_REDIS_REST_TOKEN,
@@ -31,7 +34,7 @@ export async function publishVoteUpdate(
   voteData: {
     totalVotes: number;
     voteCounts: Array<{ optionId: string; count: number }>;
-  }
+  },
 ): Promise<void> {
   const client = getRedisClient();
   if (!client) {
@@ -58,7 +61,7 @@ export async function subscribeToVoteUpdates(
   callback: (data: {
     totalVotes: number;
     voteCounts: Array<{ optionId: string; count: number }>;
-  }) => void
+  }) => void,
 ): Promise<() => void> {
   const client = getRedisClient();
   if (!client) {
@@ -68,8 +71,11 @@ export async function subscribeToVoteUpdates(
   const channel = `poll:${pollId}:votes`;
 
   try {
-    // Create a subscription
-    const subscription = await client.subscribe(channel, (message) => {
+    // Create a subscription - Upstash subscribe returns a subscription object
+    const subscription = client.subscribe(channel);
+
+    // Set up message handler using any to bypass type issues with Upstash's complex types
+    (subscription as any).on("message", (message: string) => {
       try {
         const data = JSON.parse(message);
         callback(data);
@@ -80,7 +86,7 @@ export async function subscribeToVoteUpdates(
 
     // Return unsubscribe function
     return () => {
-      subscription.unsubscribe();
+      (subscription as any).unsubscribe();
     };
   } catch (error) {
     console.error("Error subscribing to vote updates:", error);

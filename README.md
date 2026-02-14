@@ -6,6 +6,7 @@ A modern, production-ready polling application built with Astro, React, and Post
 
 - **Instant Poll Creation**: Create polls with a question and up to 10 options
 - **Real-Time Results**: Results update automatically for all viewers using Server-Sent Events
+- **Redis Pub/Sub**: Optional instant vote syncing via Upstash Redis (with automatic polling fallback)
 - **Shareable Links**: Each poll gets a unique URL for easy sharing
 - **Anti-Abuse Protection**: Multiple mechanisms to prevent duplicate and fraudulent voting
 - **Modern UI**: Clean, responsive design built with shadcn/ui components
@@ -53,7 +54,7 @@ A modern, production-ready polling application built with Astro, React, and Post
 - Multiple users behind NAT will appear as a single IP
 - CGNAT (Carrier-Grade NAT) can further reduce effectiveness
 
-### 3. Request Rate Limiting (NEW)
+3. **Request Rate Limiting (NEW)**
 **Threat Prevented**: Automated scripts spamming vote requests, brute force attacks
 
 **Implementation**:
@@ -72,7 +73,32 @@ A modern, production-ready polling application built with Astro, React, and Post
 - If not configured, rate limiting is disabled (fail-open)
 - See https://upstash.com for free Redis tier
 
-### 4. User Agent Tracking (NEW)
+### 4. Redis Pub/Sub Real-Time Sync (NEW)
+**Feature**: Instant vote updates across all connected clients
+
+**Implementation**:
+- Uses Upstash Redis pub/sub for instant message broadcasting
+- Automatic fallback to 2-second polling when Redis unavailable
+- Type-safe vote data serialization
+
+**How It Works**:
+- When a vote is cast, update is published to Redis channel `poll:{id}:votes`
+- All connected SSE clients receive update instantly
+- If Redis fails, clients seamlessly switch to polling
+- Client detects mode on connection (realtime_active vs polling_active)
+
+**Benefits**:
+- Sub-second vote synchronization
+- Reduced server load compared to polling-only
+- Better UX with instant visual feedback
+- No data loss during Redis outages
+
+**Configuration**:
+- Uses same Redis credentials as rate limiting
+- Automatically enabled when Redis is configured
+- Graceful degradation ensures app works without Redis
+
+### 5. User Agent Tracking (NEW)
 **Threat Prevented**: Same user clearing cookies but using same browser
 
 **Implementation**:
@@ -91,7 +117,7 @@ A modern, production-ready polling application built with Astro, React, and Post
 - Browser updates can change User-Agent strings
 - Not used for blocking, only tracking and analysis
 
-### 5. Vote Attempt Auditing (NEW)
+### 6. Vote Attempt Auditing (NEW)
 **Threat Prevented**: Provides visibility into abuse patterns and attempted fraud
 
 **Implementation**:
